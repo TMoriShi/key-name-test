@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>楽器キィ名称テスト対策 (完全ランダム・エンドレス版)</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f4f8;
+            color: #333;
+        }
+        h1 { text-align: center; color: #2c3e50; font-size: 24px; margin-bottom: 20px; }
+        .container {
+            display: flex;
+            gap: 20px;
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+        .left-panel {
+            flex: 1;
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+        .right-panel {
+            width: 450px;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .canvas-container {
+            position: relative;
+            display: inline-block;
+            background-color: #fafafa;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            overflow: auto;
+            max-width: 100%;
+        }
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        img {
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+        .quiz-status {
+            font-size: 18px;
+            font-weight: bold;
+            color: #7f8c8d;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .quiz-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            border-left: 5px solid #3498db;
+        }
+        .instruction {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #34495e;
+        }
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+        input[type="text"] {
+            flex: 1;
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #bdc3c7;
+            border-radius: 6px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        input[type="text"]:focus {
+            border-color: #3498db;
+        }
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+        button:active { transform: scale(0.98); }
+        .answer-btn { background-color: #3498db; color: white; }
+        .answer-btn:hover { background-color: #2980b9; }
+        .next-btn { background-color: #2ecc71; color: white; width: 100%; }
+        .next-btn:hover { background-color: #27ae60; }
+        
+        .feedback {
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            margin: 15px 0;
+            min-height: 36px;
+        }
+        .correct { color: #2ecc71; }
+        .incorrect { color: #e74c3c; }
+        
+        .result-detail {
+            font-size: 15px;
+            background: #edf2f7;
+            padding: 12px;
+            border-radius: 6px;
+            display: none;
+            line-height: 1.5;
+        }
+        .score-display {
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-top: auto;
+            background: #e2e8f0;
+            padding: 10px;
+            border-radius: 6px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>クラリネット キィ名称テスト (完全ランダム)</h1>
+
+    <div class="container">
+        <div class="left-panel">
+            <div class="canvas-container" id="canvasContainer">
+                <img id="instrumentImage" src="clarinet.png" alt="クラリネット画像">
+                <canvas id="quizCanvas"></canvas>
+            </div>
+        </div>
+
+        <div class="right-panel">
+            <div class="quiz-status">
+                <span>現在の周回: <span id="loopCount" style="color:#3498db;">1</span> 周目</span>
+                <span>問題: <span id="currentNum">0</span> / <span id="totalNum">0</span></span>
+            </div>
+
+            <div class="quiz-card" id="quizCard">
+                <div class="instruction">🔴 赤く色が付いているキィの名称は？</div>
+                
+                <div class="input-group">
+                    <input type="text" id="userInput" placeholder="名称を入力してEnter" autocomplete="off">
+                    <button type="button" class="answer-btn" id="submitBtn">判定</button>
+                </div>
+
+                <div class="feedback" id="feedback"></div>
+                
+                <div class="result-detail" id="resultDetail">
+                    <strong>正解:</strong> <span id="correctAnswer" style="color:#e74c3c; font-weight:bold;"></span><br>
+                    <span style="font-size: 13px; color:#7f8c8d;">※「キー」と「キィ」の表記揺れは自動で許容されます。</span>
+                </div>
+            </div>
+
+            <button type="button" class="next-btn" id="nextBtn" style="display: none;">次の問題へ</button>
+
+            <div class="score-display">
+                通算正解数: <span id="score" style="color:#2ecc71;">0</span> / 解いた総数: <span id="totalAnswered" style="color:#7f8c8d;">0</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 元の問題データ定義（マスターデータ）
+        // ==========================================
+        const quizDataRaw = [
+            { "x": 130, "y": 244, "rx": 8, "ry": 14, "name": "レジスターキィ" },
+            { "x": 127, "y": 271, "rx": 8, "ry": 9, "name": "サムリング" },
+            { "x": 220, "y": 346, "rx": 5, "ry": 5, "name": "Cトリルキィ" },
+            { "x": 218, "y": 357, "rx": 5, "ry": 4, "name": "Bbトリルキィ" },
+            { "x": 224, "y": 365, "rx": 5, "ry": 4, "name": "F#/C#トリルキィ" },
+            { "x": 222, "y": 372, "rx": 5, "ry": 4, "name": "Eb/Bbトリルキィ" },
+            { "x": 248, "y": 397, "rx": 7, "ry": 7, "name": "下管リングキィ" },
+            { "x": 244, "y": 433, "rx": 9, "ry": 3, "name": "B/F#キィ" },
+            { "x": 221, "y": 458, "rx": 7, "ry": 6, "name": "F#/C#キィ" },
+            { "x": 235, "y": 463, "rx": 7, "ry": 6, "name": "Ab/Ebキィ" },
+            { "x": 219, "y": 474, "rx": 7, "ry": 6, "name": "E/Bキィ" },
+            { "x": 235, "y": 477, "rx": 7, "ry": 6, "name": "F/Cキィ" },
+            { "x": 235, "y": 659, "rx": 21, "ry": 43, "name": "ベル" },
+            { "x": 243, "y": 481, "rx": 24, "ry": 107, "name": "下管" },
+            { "x": 277, "y": 377, "rx": 5, "ry": 13, "name": "F#/C#レバー" },
+            { "x": 266, "y": 374, "rx": 5, "ry": 13, "name": "E/Bレバー" },
+            { "x": 277, "y": 359, "rx": 9, "ry": 3, "name": "F/Cレバー" },
+            { "x": 261, "y": 351, "rx": 11, "ry": 4, "name": "C#/G#キィ" },
+            { "x": 257, "y": 328, "rx": 11, "ry": 3, "name": "Eb/Bbキィ" },
+            { "x": 252, "y": 318, "rx": 8, "ry": 7, "name": "D/Aリングキィ" },
+            { "x": 254, "y": 286, "rx": 6, "ry": 6, "name": "F#リングキィ" },
+            { "x": 274, "y": 269, "rx": 6, "ry": 14, "name": "G#キィ" },
+            { "x": 257, "y": 236, "rx": 8, "ry": 8, "name": "Aキィ" },
+            { "x": 259, "y": 263, "rx": 21, "ry": 84, "name": "上管" },
+            { "x": 266, "y": 138, "rx": 21, "ry": 27, "name": "バレル" },
+            { "x": 265, "y": 85, "rx": 21, "ry": 17, "name": "リガチャー" },
+            { "x": 267, "y": 68, "rx": 15, "ry": 30, "name": "マウスピース" }
+        ];
+
+        // 完全に偏りのないシャッフルを行う関数 (Fisher-Yates)
+        function shuffleArray(array) {
+            // 元のデータを破壊しないようにディープコピー
+            const arr = JSON.parse(JSON.stringify(array));
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        // 実行用のクイズ配列
+        let quizData = [];
+
+        // 要素の取得
+        const img = document.getElementById('instrumentImage');
+        const canvas = document.getElementById('quizCanvas');
+        const ctx = canvas.getContext('2d');
+        const container = document.getElementById('canvasContainer');
+
+        const currentNumSpan = document.getElementById('currentNum');
+        const totalNumSpan = document.getElementById('totalNum');
+        const loopCountSpan = document.getElementById('loopCount');
+        const userInput = document.getElementById('userInput');
+        const submitBtn = document.getElementById('submitBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const feedback = document.getElementById('feedback');
+        const resultDetail = document.getElementById('resultDetail');
+        const correctAnswerSpan = document.getElementById('correctAnswer');
+        const scoreSpan = document.getElementById('score');
+        const totalAnsweredSpan = document.getElementById('totalAnswered');
+
+        let currentIndex = 0;
+        let score = 0;
+        let totalAnswered = 0;
+        let isAnswered = false;
+        let currentLoop = 1;
+
+        img.onload = function() {
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
+            container.style.width = img.naturalWidth + 'px';
+            container.style.height = img.naturalHeight + 'px';
+            
+            totalNumSpan.textContent = quizDataRaw.length;
+            
+            // 初回のシャッフル生成
+            quizData = shuffleArray(quizDataRaw);
+            initQuiz();
+        };
+        if (img.complete) img.onload();
+
+        function initQuiz() {
+            // 全問消化したらインデックスをリセットし、新しくシャッフル
+            if (currentIndex >= quizData.length) {
+                currentIndex = 0;
+                currentLoop++;
+                loopCountSpan.textContent = currentLoop;
+                quizData = shuffleArray(quizDataRaw); // ここで次の周用の完全新ランダムデータを生成
+            }
+
+            isAnswered = false;
+            currentNumSpan.textContent = currentIndex + 1;
+            userInput.value = '';
+            userInput.disabled = false;
+            submitBtn.style.display = 'block';
+            nextBtn.style.display = 'none';
+            feedback.textContent = '';
+            resultDetail.style.display = 'none';
+            
+            drawTarget();
+            userInput.focus();
+        }
+
+        function drawTarget() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const current = quizData[currentIndex];
+
+            ctx.beginPath();
+            ctx.ellipse(current.x, current.y, current.rx, current.ry, 0, 0, 2 * Math.PI);
+            ctx.fillStyle = 'rgba(231, 76, 60, 0.6)'; 
+            ctx.fill();
+            ctx.strokeStyle = '#e74c3c';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.arc(current.x, current.y, 2, 0, 2 * Math.PI);
+            ctx.fillStyle = '#e74c3c';
+            ctx.fill();
+        }
+
+        function normalizeText(str) {
+            return str.trim()
+                .toLowerCase()
+                .replace(/キィ/g, 'キー')
+                .replace(/♯/g, '#')
+                .replace(/♭/g, 'b')
+                .replace(/[Ａ-Ｚａ-ｚ０-９]/g, function(s) {
+                    return String.fromCharCode(s.charCodeAt(0) - 0xFEE0);
+                });
+        }
+
+        function checkAnswer() {
+            if (isAnswered) return;
+            
+            const inputName = userInput.value.trim();
+            const current = quizData[currentIndex];
+
+            const normalizedInput = normalizeText(inputName);
+            const normalizedCorrect = normalizeText(current.name);
+
+            totalAnswered++;
+            totalAnsweredSpan.textContent = totalAnswered;
+
+            if (normalizedInput === normalizedCorrect) {
+                feedback.textContent = '◯ 正解！';
+                feedback.className = 'feedback correct';
+                score++;
+                scoreSpan.textContent = score;
+            } else {
+                feedback.textContent = '× 不正解';
+                feedback.className = 'feedback incorrect';
+            }
+
+            correctAnswerSpan.textContent = current.name;
+            resultDetail.style.display = 'block';
+            
+            isAnswered = true;
+            userInput.disabled = true;
+            submitBtn.style.display = 'none';
+            nextBtn.style.display = 'block';
+            nextBtn.focus();
+        }
+
+        submitBtn.addEventListener('click', checkAnswer);
+        
+        userInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                if (!isAnswered) {
+                    checkAnswer();
+                } else {
+                    currentIndex++;
+                    initQuiz();
+                }
+            }
+        });
+
+        nextBtn.addEventListener('click', function() {
+            currentIndex++;
+            initQuiz();
+        });
+    </script>
+</body>
+</html>
