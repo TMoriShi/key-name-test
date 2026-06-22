@@ -9,17 +9,17 @@
         body {
             font-family: '-apple-system', BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             margin: 0;
-            padding: 10px;
+            padding: 5px; /* 全体の余白を最小限に */
             background-color: #f0f4f8;
             color: #333;
         }
-        h1 { text-align: center; color: #2c3e50; font-size: 20px; margin: 10px 0; }
+        h1 { text-align: center; color: #2c3e50; font-size: 16px; margin: 5px 0; }
         
         .container {
             display: flex;
             flex-direction: column;
-            gap: 15px;
-            max-width: 600px;
+            gap: 8px; /* パネル間の隙間を狭く */
+            max-width: 500px;
             margin: 0 auto;
         }
         
@@ -27,9 +27,9 @@
         .left-panel {
             width: 100%;
             background: white;
-            padding: 10px;
-            border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            padding: 5px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
             text-align: center;
         }
         
@@ -37,12 +37,12 @@
         .right-panel {
             width: 100%;
             background: white;
-            padding: 15px;
-            border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 8px;
         }
         
         .canvas-container {
@@ -64,6 +64,8 @@
             display: block;
             max-width: 100%;
             height: auto;
+            max-height: 45vh; /* 縦幅を取りすぎないよう画像の最大高さを画面縦の45%に制限 */
+            object-fit: contain;
         }
 
         /* 設定エリア（トグルスイッチ） */
@@ -71,15 +73,15 @@
             display: flex;
             justify-content: flex-end;
             align-items: center;
-            gap: 8px;
-            font-size: 13px;
+            gap: 6px;
+            font-size: 11px;
             color: #7f8c8d;
         }
         .switch {
             position: relative;
             display: inline-block;
-            width: 40px;
-            height: 22px;
+            width: 34px;
+            height: 18px;
         }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider {
@@ -88,78 +90,67 @@
             top: 0; left: 0; right: 0; bottom: 0;
             background-color: #ccc;
             transition: .2s;
-            border-radius: 22px;
+            border-radius: 18px;
         }
         .slider:before {
             position: absolute;
             content: "";
-            height: 16px; width: 16px;
-            left: 3px; bottom: 3px;
+            height: 14px; width: 14px;
+            left: 2px; bottom: 2px;
             background-color: white;
             transition: .2s;
             border-radius: 50%;
         }
         input:checked + .slider { background-color: #3498db; }
-        input:checked + .slider:before { transform: translateX(18px); }
+        input:checked + .slider:before { transform: translateX(16px); }
 
         .quiz-card {
             background: #f8f9fa;
-            border-radius: 8px;
-            padding: 15px;
-            border-left: 5px solid #3498db;
-        }
-        .instruction {
-            font-size: 15px;
-            font-weight: bold;
-            margin-bottom: 12px;
-            color: #34495e;
+            border-radius: 6px;
+            padding: 10px; /* 内側の余白を狭く */
+            border-left: 4px solid #3498db;
         }
         .input-group {
             display: flex;
-            gap: 10px;
+            gap: 8px;
         }
         input[type="text"] {
             flex: 1;
-            padding: 12px;
-            font-size: 16px;
+            padding: 10px;
+            font-size: 16px; /* スマホズーム防止 */
             border: 2px solid #bdc3c7;
             border-radius: 6px;
             outline: none;
-            transition: border-color 0.2s;
         }
         input[type="text"]:focus {
             border-color: #3498db;
         }
         button {
-            padding: 12px 20px;
-            font-size: 16px;
+            padding: 10px 16px;
+            font-size: 15px;
             font-weight: bold;
             border: none;
             border-radius: 6px;
             cursor: pointer;
-            transition: background 0.2s;
         }
         .answer-btn { background-color: #3498db; color: white; }
-        .answer-btn:hover { background-color: #2980b9; }
         
         .hint-btn { 
             background-color: #95a5a6; 
             color: white; 
             width: 100%; 
-            padding: 10px;
-            font-size: 14px;
+            padding: 8px;
+            font-size: 13px;
         }
-        .hint-btn:hover { background-color: #7f8c8d; }
         
-        .next-btn { background-color: #2ecc71; color: white; width: 100%; }
-        .next-btn:hover { background-color: #27ae60; }
+        .next-btn { background-color: #2ecc71; color: white; width: 100%; padding: 12px; }
         
         .feedback {
-            font-size: 22px;
+            font-size: 18px;
             font-weight: bold;
             text-align: center;
-            margin: 10px 0;
-            min-height: 30px;
+            margin: 5px 0;
+            min-height: 22px;
         }
         .correct { color: #2ecc71; }
         .incorrect { color: #e74c3c; }
@@ -167,18 +158,18 @@
         .result-detail {
             font-size: 14px;
             background: #edf2f7;
-            padding: 10px;
+            padding: 8px;
             border-radius: 6px;
             display: none;
-            line-height: 1.5;
+            text-align: center;
         }
         .score-display {
             text-align: center;
-            font-size: 16px;
+            font-size: 13px;
             font-weight: bold;
             color: #2c3e50;
             background: #e2e8f0;
-            padding: 8px;
+            padding: 6px;
             border-radius: 6px;
         }
     </style>
@@ -197,7 +188,7 @@
 
         <div class="right-panel">
             <div class="config-panel">
-                <label>次の問題で自動入力モードにする</label>
+                <label>自動入力モード</label>
                 <label class="switch">
                     <input type="checkbox" id="focusToggle">
                     <span class="slider"></span>
@@ -205,8 +196,6 @@
             </div>
 
             <div class="quiz-card" id="quizCard">
-                <div class="instruction">🔴 マークの部分の名称は？</div>
-                
                 <div class="input-group">
                     <input type="text" id="userInput" placeholder="名称を入力" autocomplete="off">
                     <button type="button" class="answer-btn" id="submitBtn">判定</button>
@@ -384,7 +373,7 @@
             isAnswered = true;
             userInput.disabled = true;
             hintBtn.style.display = 'none';
-            submitBtn.style.display = 'none'; // 判定したら判定ボタンを即隠す
+            submitBtn.style.display = 'none';
 
             if (normalizedInput === normalizedCorrect) {
                 feedback.textContent = '◯ 正解！';
@@ -404,8 +393,6 @@
                 resultDetail.style.display = 'block';
                 
                 nextBtn.style.display = 'block';
-                // スマホ・PCでEnter連打によるスキップを防ぐため、次へボタンに即フォーカスを当てない
-                // nextBtn.focus(); 
             }
         }
 
@@ -432,13 +419,10 @@
         
         userInput.addEventListener('keydown', function(e) {
             if (e.key === 'Enter') {
-                e.preventDefault(); // 予期せぬフォーム送信挙動をガード
+                e.preventDefault();
                 if (!isAnswered) {
                     checkAnswer();
                 }
-                // 【バグ修正の肝】
-                // 不正解（isAnswered === true）の時は、ここでEnterを押されても「何もしない」ようにガード。
-                // これにより、間違えた時にEnterを連打しても勝手に次に進まなくなります。
             }
         });
 
