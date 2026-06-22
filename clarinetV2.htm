@@ -65,6 +65,43 @@
             max-width: 100%;
             height: auto;
         }
+
+        /* 設定エリア（トグルスイッチ） */
+        .config-panel {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #7f8c8d;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 22px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc;
+            transition: .2s;
+            border-radius: 22px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px; width: 16px;
+            left: 3px; bottom: 3px;
+            background-color: white;
+            transition: .2s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: #3498db; }
+        input:checked + .slider:before { transform: translateX(18px); }
+
         .quiz-card {
             background: #f8f9fa;
             border-radius: 8px;
@@ -105,7 +142,6 @@
         .answer-btn { background-color: #3498db; color: white; }
         .answer-btn:hover { background-color: #2980b9; }
         
-        /* 答えを見るボタンのスタイル */
         .hint-btn { 
             background-color: #95a5a6; 
             color: white; 
@@ -160,11 +196,19 @@
         </div>
 
         <div class="right-panel">
+            <div class="config-panel">
+                <label>次の問題で自動入力モードにする</label>
+                <label class="switch">
+                    <input type="checkbox" id="focusToggle">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
             <div class="quiz-card" id="quizCard">
                 <div class="instruction">🔴 マークの部分の名称は？</div>
                 
                 <div class="input-group">
-                    <input type="text" id="userInput" placeholder="名称を入力" autocomplete="off" autofocus>
+                    <input type="text" id="userInput" placeholder="名称を入力" autocomplete="off">
                     <button type="button" class="answer-btn" id="submitBtn">判定</button>
                 </div>
 
@@ -176,7 +220,6 @@
             </div>
 
             <button type="button" class="hint-btn" id="hintBtn">答えを見る</button>
-            
             <button type="button" class="next-btn" id="nextBtn" style="display: none;">次の問題へ</button>
 
             <div class="score-display">
@@ -242,6 +285,7 @@
         const correctAnswerSpan = document.getElementById('correctAnswer');
         const scoreSpan = document.getElementById('score');
         const totalAnsweredSpan = document.getElementById('totalAnswered');
+        const focusToggle = document.getElementById('focusToggle');
 
         let currentIndex = 0;
         let score = 0;
@@ -275,7 +319,7 @@
             userInput.value = '';
             userInput.disabled = false;
             submitBtn.style.display = 'block';
-            hintBtn.style.display = 'block'; // 答えを見るボタンを表示
+            hintBtn.style.display = 'block';
             hintBtn.textContent = '答えを見る';
             nextBtn.style.display = 'none';
             feedback.textContent = '';
@@ -283,7 +327,9 @@
             
             drawTarget();
             
-            setTimeout(() => userInput.focus(), 50);
+            if (focusToggle.checked) {
+                setTimeout(() => userInput.focus(), 50);
+            }
         }
 
         function drawTarget() {
@@ -337,14 +383,14 @@
             totalAnsweredSpan.textContent = totalAnswered;
             isAnswered = true;
             userInput.disabled = true;
-            hintBtn.style.display = 'none'; // 解答後は非表示に
+            hintBtn.style.display = 'none';
+            submitBtn.style.display = 'none'; // 判定したら判定ボタンを即隠す
 
             if (normalizedInput === normalizedCorrect) {
                 feedback.textContent = '◯ 正解！';
                 feedback.className = 'feedback correct';
                 score++;
                 scoreSpan.textContent = score;
-                submitBtn.style.display = 'none';
                 
                 autoAdvanceTimeout = setTimeout(() => {
                     currentIndex++;
@@ -357,13 +403,12 @@
                 correctAnswerSpan.textContent = current.name;
                 resultDetail.style.display = 'block';
                 
-                submitBtn.style.display = 'none';
                 nextBtn.style.display = 'block';
-                nextBtn.focus();
+                // スマホ・PCでEnter連打によるスキップを防ぐため、次へボタンに即フォーカスを当てない
+                // nextBtn.focus(); 
             }
         }
 
-        // 答えを見るボタンのイベント
         hintBtn.addEventListener('click', function() {
             const current = quizData[currentIndex];
             if (resultDetail.style.display === 'block') {
@@ -374,13 +419,10 @@
                 resultDetail.style.display = 'block';
                 hintBtn.textContent = '答えを隠す';
                 
-                // 答えを見た場合は、そのまま「次の問題へ」移行できるようにボタンを切り替える
                 submitBtn.style.display = 'none';
                 hintBtn.style.display = 'none';
                 nextBtn.style.display = 'block';
-                nextBtn.focus();
                 
-                // 解答済みにマーク（総数にはカウントしない）
                 isAnswered = true;
                 userInput.disabled = true;
             }
@@ -390,18 +432,18 @@
         
         userInput.addEventListener('keydown', function(e) {
             if (e.key === 'Enter') {
+                e.preventDefault(); // 予期せぬフォーム送信挙動をガード
                 if (!isAnswered) {
                     checkAnswer();
-                } else {
-                    clearTimeout(autoAdvanceTimeout);
-                    currentIndex++;
-                    initQuiz();
                 }
+                // 【バグ修正の肝】
+                // 不正解（isAnswered === true）の時は、ここでEnterを押されても「何もしない」ようにガード。
+                // これにより、間違えた時にEnterを連打しても勝手に次に進まなくなります。
             }
         });
 
         nextBtn.addEventListener('click', function() {
-            clearTimeout(autoAdvanceTimeout);
+            if (autoAdvanceTimeout) clearTimeout(autoAdvanceTimeout);
             currentIndex++;
             initQuiz();
         });
