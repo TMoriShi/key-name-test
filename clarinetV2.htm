@@ -9,7 +9,7 @@
         body {
             font-family: '-apple-system', BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             margin: 0;
-            padding: 5px; /* 全体の余白を最小限に */
+            padding: 5px;
             background-color: #f0f4f8;
             color: #333;
         }
@@ -18,12 +18,11 @@
         .container {
             display: flex;
             flex-direction: column;
-            gap: 8px; /* パネル間の隙間を狭く */
+            gap: 8px;
             max-width: 500px;
             margin: 0 auto;
         }
         
-        /* 上側：画像エリア */
         .left-panel {
             width: 100%;
             background: white;
@@ -33,7 +32,6 @@
             text-align: center;
         }
         
-        /* 下側：解答・ステータスエリア */
         .right-panel {
             width: 100%;
             background: white;
@@ -64,11 +62,10 @@
             display: block;
             max-width: 100%;
             height: auto;
-            max-height: 45vh; /* 縦幅を取りすぎないよう画像の最大高さを画面縦の45%に制限 */
+            max-height: 45vh;
             object-fit: contain;
         }
 
-        /* 設定エリア（トグルスイッチ） */
         .config-panel {
             display: flex;
             justify-content: flex-end;
@@ -107,7 +104,7 @@
         .quiz-card {
             background: #f8f9fa;
             border-radius: 6px;
-            padding: 10px; /* 内側の余白を狭く */
+            padding: 10px;
             border-left: 4px solid #3498db;
         }
         .input-group {
@@ -117,7 +114,7 @@
         input[type="text"] {
             flex: 1;
             padding: 10px;
-            font-size: 16px; /* スマホズーム防止 */
+            font-size: 16px;
             border: 2px solid #bdc3c7;
             border-radius: 6px;
             outline: none;
@@ -381,6 +378,7 @@
                 score++;
                 scoreSpan.textContent = score;
                 
+                // 正解時は1秒後に自動遷移
                 autoAdvanceTimeout = setTimeout(() => {
                     currentIndex++;
                     initQuiz();
@@ -393,6 +391,12 @@
                 resultDetail.style.display = 'block';
                 
                 nextBtn.style.display = 'block';
+
+                // ★ 不正解時：正解を確認できるように3秒（3000ms）待ってから自動遷移
+                autoAdvanceTimeout = setTimeout(() => {
+                    currentIndex++;
+                    initQuiz();
+                }, 1000);
             }
         }
 
@@ -412,6 +416,12 @@
                 
                 isAnswered = true;
                 userInput.disabled = true;
+
+                // 答えを見るボタンを押した時も3秒後に自動遷移
+                autoAdvanceTimeout = setTimeout(() => {
+                    currentIndex++;
+                    initQuiz();
+                }, 1000);
             }
         });
 
