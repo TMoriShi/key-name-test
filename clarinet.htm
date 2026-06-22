@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>クラリネット キー・パーツ名称テスト（スマホ完全対応版）</title>
+    <title>クラリネット キー・パーツ名称テスト</title>
     <style>
         :root {
             /* 画面幅に応じて基準となるフォントサイズを動的に計算 */
@@ -106,7 +106,7 @@
             border-color: #007aff;
         }
 
-        /* 💻 画像を包むコンテナのスタイル */
+        /* 💻 画像を包むコンテナ（ズームなし・常に全体を表示する安定仕様） */
         #outer-viewport {
             width: 100%;
             border: 1px solid #ccc;
@@ -117,21 +117,12 @@
             box-sizing: border-box;
         }
         
-        /* 📱 一問一答（ズームモード）の時だけ、JavaScriptでこのクラスを外枠に付与して高さを制限します */
-        #outer-viewport.zoom-active {
-            max-height: 55vh; 
-            overflow: auto;
-            -webkit-overflow-scrolling: touch; 
-        }
-
         #image-container {
             position: relative;
             display: block;
             width: 100%;
             max-width: 100%;
             margin: 0 auto;
-            transform-origin: top left;
-            transition: transform 0.25s ease-out;
         }
         #quiz-image {
             width: 100%;
@@ -159,7 +150,7 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             white-space: nowrap;
             z-index: 2;
-            transition: all 0.2s ease;
+            transition: background-color 0.2s, border-color 0.2s;
         }
         .quiz-mask:hover {
             background-color: #d1d1d6;
@@ -202,7 +193,7 @@
             color: white;
         }
 
-        /* 新モード用のハイライトアニメーション */
+        /* 一問一答モード用のハイライトアニメーション */
         .quiz-mask.highlighted {
             background-color: #ff3b30;
             border-color: #ff3b30;
@@ -290,6 +281,7 @@
     </div>
 
     <script>
+        // 修正していただいた最新の座標データ
         const quizData = [
           { "id": "key_6365", "name": "レジスターキィ", "x_percent": 12.7, "y_percent": 31 },
           { "id": "key_3853", "name": "サムリング", "x_percent": 11.7, "y_percent": 35.5 },
@@ -354,7 +346,6 @@
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             window.event.target.classList.add('active');
             removeActiveInput();
-            resetZoom();
             
             if (missTimeoutId) {
                 clearTimeout(missTimeoutId);
@@ -468,56 +459,19 @@
                 .replace(/\//g, '');
         };
 
-        // 一問一答専用の自動ズーム処理（手動調整用）
-        function zoomToKey(x_percent, y_percent) {
-            if (currentMode !== 'keyname') return; 
-            
-            // 一問一答の時だけ外枠にスクロール機能と高さ制限を付与する
-            outerViewport.classList.add('zoom-active');
-            
-            // 🛠️【手動調整：ズーム倍率】
-            // 1.7倍に拡大しています。調整したい場合はここを変更してください。
-            const zoomLevel = 1.7;
-            imageContainer.style.transform = `scale(${zoomLevel})`;
-            
-            setTimeout(() => {
-                const imgWidth = imageContainer.offsetWidth;
-                const imgHeight = imageContainer.offsetHeight;
-                
-                const targetX = (imgWidth * (x_percent / 100)) * zoomLevel;
-                const targetY = (imgHeight * (y_percent / 100)) * zoomLevel;
-                
-                // 🛠️【手動調整：上下左右のカメラ位置】
-                // ターゲットが画面の真ん中に来る計算式です。
-                // 例：もっと画面の上寄りに映したい（下を見たい）時は、末尾に + 40 などを足してください。
-                // 例：もっと画面の下寄りに映したい（上を見たい）時は、末尾に - 40 などを引いてください。
-                outerViewport.scrollLeft = targetX - (outerViewport.clientWidth / 2);
-                outerViewport.scrollTop = targetY - (outerViewport.clientHeight / 2);
-            }, 100);
-        }
-
-        // 他のすべての通常モードでズームを完全に解除して元の100%全画面に収める処理
-        function resetZoom() {
-            outerViewport.classList.remove('zoom-active'); // スクロール枠と高さ制限を完全解除
-            imageContainer.style.transform = 'scale(1)'; // 画像を元の1倍全体表示に戻す
-            outerViewport.scrollLeft = 0;
-            outerViewport.scrollTop = 0;
-        }
-
         function nextQuestion() {
             currentIdxSpan.textContent = solvedCount;
             imageContainer.querySelectorAll('.quiz-mask').forEach(m => m.classList.remove('highlighted'));
 
             if (questionQueue.length === 0) {
                 if (currentMode === 'keyname') {
-                    // 一問一答モードなら、配列を再シャッフルして無限ループさせる
+                    // 一問一答モードなら、配列を再シャッフルして無限ループ
                     questionQueue = [...quizData].sort(() => Math.random() - 0.5);
                 } else {
                     targetNameSpan.textContent = '🎉 全問正解！テスト対策完了！';
                     skipBtn.style.display = 'none';
                     inputAnswerBox.style.display = 'none';
                     currentQuestion = null;
-                    resetZoom();
                     return;
                 }
             }
@@ -526,7 +480,6 @@
             textAnswerInput.value = '';
 
             if (currentMode === 'quiz') {
-                resetZoom(); // 「選んでね」モードは全体表示
                 targetNameSpan.textContent = `🎯 「 ${currentQuestion.name} 」 はどこ？`;
             } else if (currentMode === 'keyname') {
                 targetNameSpan.textContent = `❓ 赤く光っているパーツの名前は何？`;
@@ -535,7 +488,6 @@
                 if (targetMask) {
                     targetMask.classList.add('highlighted');
                 }
-                zoomToKey(currentQuestion.x_percent, currentQuestion.y_percent);
                 textAnswerInput.focus();
             }
         }
@@ -712,7 +664,6 @@
                 questionBox.className = '';
             }
             userAnswers = {};
-            resetZoom();
             initQuiz();
         }
     </script>
