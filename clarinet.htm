@@ -2,8 +2,8 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>クラリネット キー・パーツ名称テスト</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>クラリネット キー・パーツ名称テスト（スマホ完全対応版）</title>
     <style>
         :root {
             /* 画面幅に応じて基準となるフォントサイズを動的に計算 */
@@ -29,7 +29,6 @@
             width: 100%;
             box-sizing: border-box;
             margin-bottom: 20px;
-            overflow: hidden; /* ズーム時のハミ出し防止 */
         }
         .mode-tabs {
             display: flex;
@@ -85,26 +84,57 @@
             margin-bottom: 10px;
         }
         
-        /* ズーム表現を滑らかにするための設定 */
+        /* 回答用テキスト入力エリア */
+        #input-answer-box {
+            display: none;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 15px;
+            width: 100%;
+        }
+        #text-answer-input {
+            width: 100%;
+            max-width: 260px;
+            padding: 8px 12px;
+            font-size: 16px;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            outline: none;
+            box-sizing: border-box;
+        }
+        #text-answer-input:focus {
+            border-color: #007aff;
+        }
+
+        /* 💻 画像を包むコンテナのスタイル */
         #outer-viewport {
             width: 100%;
-            overflow: auto;
-            text-align: center;
             border: 1px solid #ccc;
             border-radius: 8px;
             background: #fff;
+            position: relative;
+            z-index: 1;
+            box-sizing: border-box;
         }
+        
+        /* 📱 一問一答（ズームモード）の時だけ、JavaScriptでこのクラスを外枠に付与して高さを制限します */
+        #outer-viewport.zoom-active {
+            max-height: 55vh; 
+            overflow: auto;
+            -webkit-overflow-scrolling: touch; 
+        }
+
         #image-container {
             position: relative;
-            display: inline-block;
+            display: block;
+            width: 100%;
             max-width: 100%;
             margin: 0 auto;
-            overflow: visible;
-            transform-origin: 0 0;
-            transition: transform 0.4s ease; /* スムーズにズーム */
+            transform-origin: top left;
+            transition: transform 0.25s ease-out;
         }
         #quiz-image {
-            max-width: 100%;
+            width: 100%;
             height: auto;
             display: block;
             user-select: none;
@@ -186,28 +216,6 @@
             100% { transform: translate(-50%, -50%) scale(1.15); opacity: 1; }
         }
 
-        /* 回答用テキスト入力エリア */
-        #input-answer-box {
-            display: none;
-            justify-content: center;
-            gap: 8px;
-            margin-bottom: 15px;
-            width: 100%;
-        }
-        #text-answer-input {
-            width: 100%;
-            max-width: 260px;
-            padding: 8px 12px;
-            font-size: 15px;
-            border: 2px solid #ccc;
-            border-radius: 8px;
-            outline: none;
-            box-sizing: border-box;
-        }
-        #text-answer-input:focus {
-            border-color: #007aff;
-        }
-
         .inline-input {
             position: absolute;
             transform: translate(-50%, -50%);
@@ -233,7 +241,7 @@
             background-color: #8e8e93;
             color: white;
             border: none;
-            padding: 8px 16px;
+            padding: 10px 16px;
             border-radius: 8px;
             font-size: 13px;
             cursor: pointer;
@@ -283,8 +291,8 @@
 
     <script>
         const quizData = [
-          { "id": "key_6365", "name": "レジスターキィ", "x_percent": 8.7, "y_percent": 30.8 },
-          { "id": "key_3853", "name": "サムリング", "x_percent": 9.7, "y_percent": 34.5 },
+          { "id": "key_6365", "name": "レジスターキィ", "x_percent": 12.7, "y_percent": 31 },
+          { "id": "key_3853", "name": "サムリング", "x_percent": 11.7, "y_percent": 35.5 },
           { "id": "key_1138", "name": "マウスピース", "x_percent": 71.7, "y_percent": 7.9 },
           { "id": "key_9697", "name": "リガチャー", "x_percent": 72.3, "y_percent": 12.1 },
           { "id": "key_9783", "name": "バレル", "x_percent": 72.3, "y_percent": 18.2 },
@@ -300,16 +308,16 @@
           { "id": "key_7393", "name": "F#/C#レバー", "x_percent": 74.6, "y_percent": 62.3 },
           { "id": "key_1003", "name": "下管", "x_percent": 65.5, "y_percent": 79.5 },
           { "id": "key_5471", "name": "ベル", "x_percent": 65.3, "y_percent": 85.3 },
-          { "id": "key_3643", "name": "F/Cキィ", "x_percent": 8.3, "y_percent": 76.5 },
-          { "id": "key_1555", "name": "E/Bキィ", "x_percent": 8.7, "y_percent": 72.5 },
-          { "id": "key_8587", "name": "Ab/Ebキィ", "x_percent": 11.1, "y_percent": 69.1 },
-          { "id": "key_8417", "name": "F#/C#キィ", "x_percent": 12.1, "y_percent": 65.2 },
-          { "id": "key_2885", "name": "B/F#キィ", "x_percent": 13.3, "y_percent": 61.6 },
-          { "id": "key_8019", "name": "下管リングキィ", "x_percent": 14.2, "y_percent": 57.8 },
-          { "id": "key_0360", "name": "Eb/Bbトリルキィ", "x_percent": 18.7, "y_percent": 54.4 },
-          { "id": "key_1436", "name": "F#/C#トリルキィ", "x_percent": 17.7, "y_percent": 50.4 },
-          { "id": "key_0311", "name": "Bbトリルキィ", "x_percent": 14.3, "y_percent": 46 },
-          { "id": "key_6630", "name": "Cトリルキィ", "x_percent": 14.9, "y_percent": 42.2 }
+          { "id": "key_3643", "name": "F/Cキィ", "x_percent": 10.3, "y_percent": 76.5 },
+          { "id": "key_1555", "name": "E/Bキィ", "x_percent": 10.7, "y_percent": 72.5 },
+          { "id": "key_8587", "name": "Ab/Ebキィ", "x_percent": 15.1, "y_percent": 69.1 },
+          { "id": "key_8417", "name": "F#/C#キィ", "x_percent": 16.1, "y_percent": 65.2 },
+          { "id": "key_2885", "name": "B/F#キィ", "x_percent": 16.3, "y_percent": 61.6 },
+          { "id": "key_8019", "name": "下管リングキィ", "x_percent": 18.2, "y_percent": 57.8 },
+          { "id": "key_0360", "name": "Eb/Bbトリルキィ", "x_percent": 20.7, "y_percent": 54.4 },
+          { "id": "key_1436", "name": "F#/C#トリルキィ", "x_percent": 21.7, "y_percent": 50.4 },
+          { "id": "key_0311", "name": "Bbトリルキィ", "x_percent": 16.3, "y_percent": 46 },
+          { "id": "key_6630", "name": "Cトリルキィ", "x_percent": 16.9, "y_percent": 42.7 }
         ];
 
         let currentMode = 'quiz'; 
@@ -336,8 +344,6 @@
 
         window.onload = () => {
             initQuiz();
-            
-            // エンターキーでも回答を送信可能にする
             textAnswerInput.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') submitTextAnswer();
             });
@@ -462,31 +468,44 @@
                 .replace(/\//g, '');
         };
 
+        // 一問一答専用の自動ズーム処理（手動調整用）
         function zoomToKey(x_percent, y_percent) {
+            if (currentMode !== 'keyname') return; 
+            
+            // 一問一答の時だけ外枠にスクロール機能と高さ制限を付与する
+            outerViewport.classList.add('zoom-active');
+            
+            // 🛠️【手動調整：ズーム倍率】
+            // 1.7倍に拡大しています。調整したい場合はここを変更してください。
             const zoomLevel = 1.7;
             imageContainer.style.transform = `scale(${zoomLevel})`;
             
             setTimeout(() => {
-                const imgWidth = imageContainer.clientWidth;
-                const imgHeight = imageContainer.clientHeight;
+                const imgWidth = imageContainer.offsetWidth;
+                const imgHeight = imageContainer.offsetHeight;
                 
                 const targetX = (imgWidth * (x_percent / 100)) * zoomLevel;
                 const targetY = (imgHeight * (y_percent / 100)) * zoomLevel;
                 
+                // 🛠️【手動調整：上下左右のカメラ位置】
+                // ターゲットが画面の真ん中に来る計算式です。
+                // 例：もっと画面の上寄りに映したい（下を見たい）時は、末尾に + 40 などを足してください。
+                // 例：もっと画面の下寄りに映したい（上を見たい）時は、末尾に - 40 などを引いてください。
                 outerViewport.scrollLeft = targetX - (outerViewport.clientWidth / 2);
                 outerViewport.scrollTop = targetY - (outerViewport.clientHeight / 2);
-            }, 50);
+            }, 100);
         }
 
+        // 他のすべての通常モードでズームを完全に解除して元の100%全画面に収める処理
         function resetZoom() {
-            imageContainer.style.transform = 'scale(1)';
+            outerViewport.classList.remove('zoom-active'); // スクロール枠と高さ制限を完全解除
+            imageContainer.style.transform = 'scale(1)'; // 画像を元の1倍全体表示に戻す
             outerViewport.scrollLeft = 0;
             outerViewport.scrollTop = 0;
         }
 
         function nextQuestion() {
             currentIdxSpan.textContent = solvedCount;
-
             imageContainer.querySelectorAll('.quiz-mask').forEach(m => m.classList.remove('highlighted'));
 
             if (questionQueue.length === 0) {
@@ -507,6 +526,7 @@
             textAnswerInput.value = '';
 
             if (currentMode === 'quiz') {
+                resetZoom(); // 「選んでね」モードは全体表示
                 targetNameSpan.textContent = `🎯 「 ${currentQuestion.name} 」 はどこ？`;
             } else if (currentMode === 'keyname') {
                 targetNameSpan.textContent = `❓ 赤く光っているパーツの名前は何？`;
@@ -520,7 +540,6 @@
             }
         }
 
-        // 一問一答モードでのテキスト回答送信（常にブラインド＆完全ランダム化）
         function submitTextAnswer() {
             if (!currentQuestion || currentMode !== 'keyname') return;
             
@@ -534,7 +553,6 @@
             }
 
             if (formatAnswer(userAns) === formatAnswer(currentQuestion.name)) {
-                // 正解しても名称をオープンせず、ハイライトだけ外して隠したままにする
                 const mask = document.getElementById(`mask-${currentQuestion.id}`);
                 if (mask) {
                     mask.classList.remove('highlighted');
@@ -551,7 +569,6 @@
             } else {
                 questionBox.className = 'missed';
                 targetNameSpan.textContent = `❌ 違います！もう一度考えてみてね！`;
-                
                 textAnswerInput.select(); 
                 
                 missTimeoutId = setTimeout(() => {
