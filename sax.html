@@ -146,13 +146,6 @@
       stroke-width: 1;
       cursor: pointer;
     }
-    
-    /* 🔍 探索モード、📝 エンドレス練習の時だけ枠線を表示
-    body:not(.mode-test) .clickable-trigger.quiz-target {
-      fill: rgba(255, 184, 108, 0.15);
-      stroke: var(--accent-color);
-      stroke-width: 2;
-    }*/
 
     /* コントロールエリア */
     #control-panel {
@@ -211,36 +204,36 @@
       cursor: pointer;
     }
 
-    /* パーツ一覧エリア */
+    /* パーツ一覧エリア - コンパクトに修正 */
     #parts-list-container {
       background: var(--panel-bg);
-      padding: 15px;
+      padding: 10px;
       border-radius: 12px;
       margin-top: 10px;
       border: 1px solid #2e2e38;
     }
     #parts-list-title {
-      font-size: 14px;
+      font-size: 13px;
       font-weight: bold;
       color: #8a8a93;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
       border-bottom: 1px solid #2e2e38;
       padding-bottom: 5px;
     }
     .parts-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-      gap: 6px;
+      grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+      gap: 4px;
     }
     .part-item-btn {
       background: #2a2a32;
       color: #e2e8f0;
       border: 1px solid #444;
-      padding: 6px 8px;
+      padding: 4px 4px;
       border-radius: 6px;
-      font-size: 12px;
+      font-size: 11px;
       cursor: pointer;
-      text-align: left;
+      text-align: center;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -326,6 +319,7 @@
   const canvasHeight = 900; 
   let currentMode = 'browse'; 
   let quizCorrectId = "";
+  let currentFocusedId = null; // 探索モードで現在ズームしているパーツを記録
   let quizList = [];
   
   // テストモード用管理データ
@@ -341,6 +335,13 @@
     buildHitboxes();
     buildPartsList();
     updateLayout();
+
+    // 画面のどこか（関係ないところ）をクリックした時に全体表示に戻す
+    document.addEventListener("click", (e) => {
+      if (currentMode === 'browse' && currentFocusedId !== null) {
+        clearBrowseState();
+      }
+    });
   });
   window.addEventListener('resize', updateLayout);
 
@@ -375,7 +376,7 @@
       path.setAttribute("class", "clickable-trigger");
       
       path.addEventListener("mouseenter", () => {
-        if (currentMode !== 'browse') return;
+        if (currentMode !== 'browse' || currentFocusedId !== null) return;
         document.querySelectorAll('.part-item-btn').forEach(b => b.classList.remove('active-part'));
         document.querySelectorAll('.clickable-trigger').forEach(el => el.classList.remove('quiz-target'));
 
@@ -385,15 +386,22 @@
       });
 
       path.addEventListener("mouseleave", () => {
-        if (currentMode !== 'browse') return;
+        if (currentMode !== 'browse' || currentFocusedId !== null) return;
         document.getElementById("info-display").innerText = "サックスのパーツにマウスを当ててみてください";
         document.getElementById("info-sub").innerText = "-";
         document.getElementById(`layer_${id}`)?.classList.remove("show");
       });
 
-      path.addEventListener("click", () => {
+      path.addEventListener("click", (e) => {
+        e.stopPropagation(); // 背景クリックを防止
         if (currentMode === 'test') {
           selectTestPart(id);
+        } else if (currentMode === 'browse') {
+          if (currentFocusedId === id) {
+            clearBrowseState(); // もう一度押したら元に戻る
+          } else {
+            setBrowseState(id); // それ以外なら対象へズーム
+          }
         }
       });
 
@@ -401,14 +409,13 @@
     });
   }
 
-  // パーツ一覧のDOM組み立て（モードによって順序を制御）
+  // パーツ一覧のDOM組み立て
   function buildPartsList() {
     const grid = document.getElementById("partsGrid");
     grid.innerHTML = "";
 
     let renderIds = Object.keys(keyData);
 
-    // テストモードの場合は完全にシャッフルした配列を使用
     if (currentMode === 'test') {
       renderIds = [...testOrder];
     }
@@ -419,19 +426,14 @@
       btn.id = `btn_list_${id}`;
       btn.innerText = (currentMode === 'test') ? `❓ パーツ` : keyData[id];
       
-      btn.addEventListener("click", () => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation(); // 背景クリックを防止
         if (currentMode === 'browse') {
-          document.querySelectorAll('.key-layer').forEach(el => el.classList.remove('show'));
-          document.querySelectorAll('.part-item-btn').forEach(b => b.classList.remove('active-part'));
-          document.querySelectorAll('.clickable-trigger').forEach(el => el.classList.remove('quiz-target'));
-
-          document.getElementById(`layer_${id}`)?.classList.add("show");
-          document.getElementById(`hitbox_${id}`)?.classList.add('quiz-target');
-          btn.classList.add("active-part");
-
-          document.getElementById("info-display").innerText = keyData[id];
-          document.getElementById("info-sub").innerText = `ID: ${id}`;
-          focusOnPart(id);
+          if (currentFocusedId === id) {
+            clearBrowseState(); // もう一度押したら元に戻る
+          } else {
+            setBrowseState(id); // 対象へズーム
+          }
         } else if (currentMode === 'test') {
           selectTestPart(id);
         }
@@ -440,7 +442,37 @@
     });
   }
 
-  // 配列をランダムにシャッフルする
+  // 探索モードでフォーカスを解除する関数
+  function clearBrowseState() {
+    document.querySelectorAll('.key-layer').forEach(el => el.classList.remove('show'));
+    document.querySelectorAll('.part-item-btn').forEach(b => b.classList.remove('active-part'));
+    document.querySelectorAll('.clickable-trigger').forEach(el => el.classList.remove('quiz-target'));
+
+    document.getElementById("info-display").innerText = "サックスのパーツにマウスを当ててみてください";
+    document.getElementById("info-sub").innerText = "-";
+    
+    currentFocusedId = null;
+    resetZoom();
+  }
+
+  // 探索モードで特定のパーツにフォーカスする関数
+  function setBrowseState(id) {
+    document.querySelectorAll('.key-layer').forEach(el => el.classList.remove('show'));
+    document.querySelectorAll('.part-item-btn').forEach(b => b.classList.remove('active-part'));
+    document.querySelectorAll('.clickable-trigger').forEach(el => el.classList.remove('quiz-target'));
+
+    document.getElementById(`layer_${id}`)?.classList.add("show");
+    document.getElementById(`hitbox_${id}`)?.classList.add('quiz-target');
+    const btn = document.getElementById(`btn_list_${id}`);
+    if(btn) btn.classList.add("active-part");
+
+    document.getElementById("info-display").innerText = keyData[id];
+    document.getElementById("info-sub").innerText = `ID: ${id}`;
+    
+    currentFocusedId = id;
+    focusOnPart(id);
+  }
+
   function shuffleArray(array) {
     for (let i = array.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -451,6 +483,7 @@
 
   function switchMode(mode) {
     currentMode = mode;
+    currentFocusedId = null; 
     
     document.body.className = `mode-${mode}`;
     
@@ -631,7 +664,6 @@
       refreshTestGridButtons();
       updateTestProgressBar();
 
-      // 保存完了演出として一瞬枠線を光らせる
       const activeBtn = document.getElementById(`btn_list_${quizCorrectId}`);
       if (activeBtn) {
         activeBtn.style.borderColor = "var(--success-color)";
@@ -640,18 +672,15 @@
 
       document.getElementById("info-display").innerText = "入力値を仮保存しました！";
       
-      // 次の未解答パーツを探す
       let currentIndex = testOrder.indexOf(quizCorrectId);
       let nextId = null;
 
-      // 現在の問題の次から最後まで探す
       for (let i = currentIndex + 1; i < testOrder.length; i++) {
         if (!testAnswers[testOrder[i]]) {
           nextId = testOrder[i];
           break;
         }
       }
-      // 見つからなければ、最初から現在の問題まで探す
       if (!nextId) {
         for (let i = 0; i < currentIndex; i++) {
           if (!testAnswers[testOrder[i]]) {
@@ -662,14 +691,14 @@
       }
 
       if (nextId) {
-        selectTestPart(nextId); // 次の未解答パーツへ移動
+        selectTestPart(nextId); 
       } else {
         document.getElementById("info-display").innerText = "🎉 すべてのパーツを解答しました！";
         document.getElementById("info-sub").innerText = "上部のボタンから一括採点してください";
         document.getElementById("answer-input").value = "";
         document.getElementById("answer-input").disabled = true;
         document.getElementById("submit-btn").disabled = true;
-        resetZoom(); // 全て終わったら全体が見えるようにズームリセット
+        resetZoom(); 
       }
     }
   }
